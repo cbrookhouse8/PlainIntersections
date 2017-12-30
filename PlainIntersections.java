@@ -86,7 +86,7 @@ public class PlainIntersections extends PApplet {
 		camPivot = new Matrix(new float[] { 0, 1, 0 }, 3, 1);
 
 		// translation vector of the camera from world-space origin
-		Matrix buildTrans = camArm.matrixAdd(camArm, camPivot);
+		Matrix buildTrans = Matrix.add(camArm, camPivot);
 
 		// assign this vector as the fourth col of 4x4 camTrans matrix
 		camTrans.M[12] = buildTrans.M[0];
@@ -107,11 +107,11 @@ public class PlainIntersections extends PApplet {
 		camRot.M[8] = -buildTrans.M[0];
 		camRot.M[9] = -buildTrans.M[1];
 		camRot.M[10] = -buildTrans.M[2];
-
+		
 		// Product of 4x4 Translation Matrix and 4x4 Rotation Matrix
-		cameraToWorld = camera.matrixProduct(camTrans, camRot);
+		cameraToWorld = Matrix.mult(camTrans, camRot);
 		worldToCamera = cameraToWorld.getInverse();
-
+		
 		toDisplay = new Matrix(4, 4);
 		toDisplay.M[0] = 600;
 		toDisplay.M[5] = 600;
@@ -146,7 +146,7 @@ public class PlainIntersections extends PApplet {
 		
 		// check if dragging the camera with mouse
 		if (d.check(pmouseX, pmouseY, mouseX, mouseY)) { 
-			Matrix camera2 = camera.matrixProduct(camRot, camera.getCopy());
+			Matrix camera2 = Matrix.mult(camRot, camera.getCopy());
 			Matrix rotUpdate = d.reorientCamera(camera2);
 			camRot.mult(rotUpdate); // update camera's orientation
 		}
@@ -156,9 +156,9 @@ public class PlainIntersections extends PApplet {
 			if (count < 80) {
 				Quaternion spin = new Quaternion(dtEase(80, count), 0, -1, 0);
 
-				camRot.mult(spin.getR(4));
-				camArm.mult(spin.getR(3));
-				camPivot.mult(spin.getR(3)); // may not be necessary depending on the pivot
+				camRot = camRot.mult(spin.getR(4));
+				camArm = camArm.mult(spin.getR(3));
+				camPivot = camPivot.mult(spin.getR(3)); // may not be necessary depending on the pivot
 
 				camTrans.M[12] = camArm.M[0] + camPivot.M[0];
 				camTrans.M[13] = camArm.M[1] + camPivot.M[1];
@@ -174,7 +174,7 @@ public class PlainIntersections extends PApplet {
 		// ---- CALCULATE worldToCamera matrix ----
 
 		// perhaps too many unnecessary multiplications here
-		cameraToWorld = camera.matrixProduct(camTrans, camRot);
+		cameraToWorld = Matrix.mult(camTrans, camRot);
 		worldToCamera = cameraToWorld.getInverse();
 
 		// ----------------------------------------
@@ -195,7 +195,6 @@ public class PlainIntersections extends PApplet {
 		objectToWorld.M[13] = -0.1f;
 		objectToWorld.M[14] = -0.05f;
 		
-		plane.display(objectToWorld, worldToCamera, toDisplay);
 		
 		if (frameCount % 60 == 0) {
 			plane = new Plane(this);
@@ -203,6 +202,7 @@ public class PlainIntersections extends PApplet {
 		
 		// ---------- //
 		
+		plane.display(objectToWorld, worldToCamera, toDisplay);
 		texture.display(objectToWorld, worldToCamera, toDisplay);
 		textureB.display(objectToWorld, worldToCamera, toDisplay);
 	
@@ -298,7 +298,7 @@ public class PlainIntersections extends PApplet {
 		}
 
 		if (key == 'l') {
-			saveFrame("pc-######.png");
+			saveFrame("pi-######.png");
 		}
 	}
 

@@ -81,7 +81,7 @@ public class Texture {
 					
 					Matrix imgPoint = new Matrix(new float[] { j, i, 0, 1 }, 4, 1);
 //					imgPoint.mult(centre).mult(scale).mult(rotate).mult(objectToWorld).mult(worldToCamera).mult(toDisplay);
-					imgPoint.mult(centre).mult(scale).mult(rotate).mult(worldToCamera).mult(toDisplay);
+					Matrix screenPos = imgPoint.mult(centre).mult(scale).mult(rotate).mult(worldToCamera).mult(toDisplay);
 					
 					int c = img.get(j, i);
 					float r = p.red(c);
@@ -89,7 +89,7 @@ public class Texture {
 					float b = p.blue(c);
 
 					p.stroke(r, g, b, this.opacity);
-					p.point(imgPoint.M[0], imgPoint.M[1]);
+					p.point(screenPos.M[0], screenPos.M[1]);
 				}
 			}
 		

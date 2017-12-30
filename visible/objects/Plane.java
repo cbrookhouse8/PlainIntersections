@@ -15,28 +15,28 @@ public class Plane {
 		this.p = p;
 		log = new Logger(this);
 		
-		Matrix corners;
-		corners = new Matrix(3, 4);
+		Matrix baseCorners;
+		baseCorners = new Matrix(3, 4);
 		
 		// Top left
-		corners.M[0] = -10;	// x
-		corners.M[1] = 8; 	// y
-		corners.M[2] = 0;	// z
+		baseCorners.M[0] = -10;	// x
+		baseCorners.M[1] = 8; 	// y
+		baseCorners.M[2] = 0;	// z
 		
 		// Top right
-		corners.M[3] = 10;	// x
-		corners.M[4] = 8;	// y
-		corners.M[5] = 0;	// z
+		baseCorners.M[3] = 10;	// x
+		baseCorners.M[4] = 8;	// y
+		baseCorners.M[5] = 0;	// z
 		
 		// Bottom right
-		corners.M[6] = 10;	// x
-		corners.M[7] = -8;	// y
-		corners.M[8] = 0;	// z
+		baseCorners.M[6] = 10;	// x
+		baseCorners.M[7] = -8;	// y
+		baseCorners.M[8] = 0;	// z
 		
 		// Bottom left
-		corners.M[9] = -10;	// x
-		corners.M[10] = -8;	// y
-		corners.M[11] = 0;	// z
+		baseCorners.M[9] = -10;	// x
+		baseCorners.M[10] = -8;	// y
+		baseCorners.M[11] = 0;	// z
 		
 		// apply a scaling
 		Matrix scale = new Matrix(3,3);
@@ -49,7 +49,7 @@ public class Plane {
 		Quaternion q_random = new Quaternion(Math.random() * Math.PI, -Math.random(), Math.random(), Math.random());
 		
 		// apply transformations
-		corners.mult(scale).mult(q_random.getR(3));
+		Matrix corners = baseCorners.mult(scale).mult(q_random.getR(3));
 		
 		vertices = new Matrix(4, 4);
 		
@@ -64,18 +64,16 @@ public class Plane {
 	}
 	
 	public void display(Matrix objectToWorld, Matrix worldToCamera, Matrix toDisplay) {
-		// this makes the case for an immutable Matrix class
-		Matrix vcsCopy = this.vertices.getCopy();
-		vcsCopy.mult(objectToWorld).mult(worldToCamera);
-		vcsCopy.project(2).mult(toDisplay);
+
+		Matrix vcs = this.vertices.mult(objectToWorld).mult(worldToCamera).project(2).mult(toDisplay);
 		
 		p.noFill();
 		p.stroke(255);
 		
 		p.beginShape();
 			
-			for (int j = 0; j < vcsCopy.m; j++) {
-				p.vertex(vcsCopy.M[j * 4], vcsCopy.M[j * 4 + 1]);
+			for (int j = 0; j < vcs.m; j++) {
+				p.vertex(vcs.M[j * 4], vcs.M[j * 4 + 1]);
 			}
 		
 		p.endShape(p.CLOSE);

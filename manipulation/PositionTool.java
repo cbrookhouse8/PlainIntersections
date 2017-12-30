@@ -12,8 +12,6 @@ public class PositionTool {
 	// which allows the camera to align it's lookAt with one of the principal
 	// components.
 
-	Matrix util;
-
 	// camera's basis
 	Matrix lookAt;
 	Matrix frameI;
@@ -33,8 +31,6 @@ public class PositionTool {
 	public PositionTool(Matrix _lookAt, Matrix _frameI, Matrix _frameJ, Matrix component, Matrix pivotPoint,
 			Matrix cameraRotationArm) {
 		// --- 1. COPY PARAMS INTO OBJECT ---
-
-		util = new Matrix( 3, 3);
 
 		// camera basis
 		lookAt = new Matrix( new float[] { _lookAt.M[0], _lookAt.M[1], _lookAt.M[2] }, 3, 1);
@@ -79,7 +75,7 @@ public class PositionTool {
 		intersection.normalize(); // an arbitrary line (principal component)
 		intersection.scale(scale); // from the centroid of the data
 
-		Matrix l3_adjust = util.matrixSub(l1, intersection); // vector from pivot to intersection
+		Matrix l3_adjust = Matrix.sub(l1, intersection); // vector from pivot to intersection
 
 		float adjustTheta = l3_l2;
 
@@ -193,7 +189,7 @@ public class PositionTool {
 		// l3 - vector from pivot to camera
 		Matrix fullTransform = new Matrix( 4, 4);
 
-		Matrix cTranslate = util.matrixAdd(util.matrixProduct(armAlign.getR(3), l3), l1);
+		Matrix cTranslate = Matrix.add(Matrix.mult(armAlign.getR(3), l3), l1);
 
 		Matrix cRotate = camAlign.getR(3);
 
