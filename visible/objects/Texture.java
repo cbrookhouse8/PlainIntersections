@@ -1,8 +1,11 @@
 package visible.objects;
 
+import java.util.ArrayList;
+
 import processing.core.PApplet;
 import processing.core.PImage;
 import small.data.structures.Matrix;
+import small.data.structures.Point;
 import small.data.structures.Quaternion;
 import utilities.Logger;
 
@@ -21,6 +24,8 @@ public class Texture {
 	Logger log;
 	int nth;
 	int opacity;
+	
+	ArrayList<Point> points;
 	
 	public Texture(PApplet p, PImage img) {
 		this.p = p;
@@ -41,19 +46,18 @@ public class Texture {
 		
 		scale = new Matrix(4, 4);
 		
-		// x [-0.25, 0.25]
-		// y [-0.2, 0.2]
+		// x [-2, 2]
+		// y [-1.6, 1.6]
 		
-		scale.M[0] = 0.5f / img.width;
-		scale.M[5] = 0.4f / img.height;
+//		scale.M[0] = 4f / img.width;
+//		scale.M[5] = 3.2f / img.height;
+		
+		scale.M[0] = 3f / img.width;
+		scale.M[5] = 2.8f / img.height;
 		
 		log.info("" + scale.M[0]);
 		log.info("" + scale.M[5]);
 
-		
-//		scale.M[0] = 0.001f;
-//		scale.M[5] = 0.001f;
-		
 		Quaternion q_random = new Quaternion(Math.random() * Math.PI, -Math.random(), Math.random(), Math.random());
 		rotate = q_random.getR(4);
 	}
@@ -66,6 +70,22 @@ public class Texture {
 		this.opacity = 100;
 	}
  	
+	public PImage getImg() {
+		return this.img;
+	}
+	
+	public Matrix getCentreTransform() {
+		return this.centre;
+	}
+	
+	public Matrix getScaleTransform() {
+		return this.scale;
+	}
+	
+	public Matrix getRotationTransform() {
+		return this.rotate;
+	}
+	
 	public void display(Matrix objectToWorld, Matrix worldToCamera, Matrix toDisplay) {
 		
 		p.noFill();
@@ -80,8 +100,16 @@ public class Texture {
 					if (i % nth == 0) continue;
 					
 					Matrix imgPoint = new Matrix(new float[] { j, i, 0, 1 }, 4, 1);
-//					imgPoint.mult(centre).mult(scale).mult(rotate).mult(objectToWorld).mult(worldToCamera).mult(toDisplay);
-					Matrix screenPos = imgPoint.mult(centre).mult(scale).mult(rotate).mult(worldToCamera).mult(toDisplay);
+
+					Matrix screenPos = imgPoint.mult(centre)
+												.mult(scale)
+												.mult(rotate)
+												//.mult(objectToWorld)
+												.mult(worldToCamera)
+												.project(2)
+												.mult(toDisplay);
+					
+//					screenPos.print();
 					
 					int c = img.get(j, i);
 					float r = p.red(c);
