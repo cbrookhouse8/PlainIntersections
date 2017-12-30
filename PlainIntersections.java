@@ -1,4 +1,8 @@
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.IntStream;
+
 import manipulation.Dragger;
 import manipulation.PositionTool;
 import processing.core.PApplet;
@@ -7,6 +11,7 @@ import small.data.structures.Matrix;
 import small.data.structures.Quaternion;
 import utilities.Logger;
 import visible.objects.Axes;
+import visible.objects.DepthRenderer;
 import visible.objects.Grid;
 import visible.objects.Plane;
 import visible.objects.Texture;
@@ -19,8 +24,8 @@ public class PlainIntersections extends PApplet {
 
 	Logger log;
 
-	Grid g; 		// Nb. transformed to world space within the class
-	Dragger d; 	// Object that handles changes in camera orientation due to mouse drag
+	Grid grid; 		// Nb. transformed to world space within the class
+	Dragger dragger; 	// Object that handles changes in camera orientation due to mouse drag
 	Axes world;
 
 	Matrix camera, camRot, camTrans, cameraToWorld;
@@ -48,12 +53,13 @@ public class PlainIntersections extends PApplet {
 	Quaternion alArm; 
 
 	PVector orbBut; 		// 0
-	PVector newData; 	// 1
 	PVector gridBut; 	// 2
 
 	Plane plane;
-	Texture texture;
+	Texture textureA;
 	Texture textureB;
+	Texture textureC;
+	Texture textureD;
 	
 	// Run this project as Java application and this
 	// method will launch the sketch
@@ -62,26 +68,30 @@ public class PlainIntersections extends PApplet {
 	}
 
 	public void settings() {
-		size(600, 600);
+		size(800, 800);
 	}
 
 	public void setup() {
-
+		
 		log = new Logger(this);
 		background(0);
 		
 		world = new Axes(this);
-		g = new Grid(this);
-		d = new Dragger();
+		grid = new Grid(this);
+		dragger = new Dragger();
 
-		camera = new Matrix(4, 3); // camera's basis vectors
+		// camera's basis vectors
+		// these can also be translated
+		// therefore drop 1s in fourth row
+		camera = new Matrix(4, 3);
 		camera.M[3] = 1;
 		camera.M[7] = 1;
 		camera.M[11] = 1;
 
 		camRot = new Matrix(4, 4);
 		camTrans = new Matrix(4, 4);
-
+		
+		// camera rig
 		camArm = new Matrix(new float[] { 0, 0, 6 }, 3, 1);
 		camPivot = new Matrix(new float[] { 0, 1, 0 }, 3, 1);
 
@@ -94,7 +104,8 @@ public class PlainIntersections extends PApplet {
 		camTrans.M[14] = buildTrans.M[2];
 
 		// need to clarify signs- left vs right handed coordinate system
-
+		
+		// TODO: breaks immutable model
 		buildTrans.normalize();
 		Matrix jVec = buildTrans.cross(new Matrix(new float[] { -1, 0, 0 }, 3, 1));
 		jVec.normalize();
@@ -110,11 +121,12 @@ public class PlainIntersections extends PApplet {
 		
 		// Product of 4x4 Translation Matrix and 4x4 Rotation Matrix
 		cameraToWorld = Matrix.mult(camTrans, camRot);
-		worldToCamera = cameraToWorld.getInverse();
+		worldToCamera = cameraToWorld.inverse();
 		
 		toDisplay = new Matrix(4, 4);
-		toDisplay.M[0] = 600;
-		toDisplay.M[5] = 600;
+		// x and y scaling
+		toDisplay.M[0] = 800;
+		toDisplay.M[5] = 800;
 		
 		// translation
 		toDisplay.M[12] = width / 2;
@@ -123,71 +135,34 @@ public class PlainIntersections extends PApplet {
 		stroke(255);
 		initializeButtons();
 		R = new Matrix(4, 4);
-
+		
 		showGrid = true;
+		
+		// Fill the world with interesting stuff
 		
 		plane = new Plane(this);
 		
-		texture = new Texture(this, loadImage("kent.jpg"));
-		texture.setOpacity(100);
-		
-		textureB = new Texture(this, loadImage("sky.jpg"));
-		textureB.setNth(1000000);
-		textureB.setOpacity(100);
+//		textureA = new Texture(this, loadImage("sky.jpg"));
+//		textureB = new Texture(this, loadImage("kent.jpg"));
+		textureA = new Texture(this, loadImage("nyc_hq.jpg"));
+		textureB = new Texture(this, loadImage("nyc_hq.jpg"));
+		textureC = new Texture(this, loadImage("nyc_hq.jpg"));
+		textureD = new Texture(this, loadImage("nyc_hq.jpg"));
+		singleRender();
 	}
-
-	public void draw() {
-		// redraw the background
+	
+	public void singleRender() {
 		background(0);
-		textAlign(LEFT, CENTER);
-		fill(255);
-		text("count = " + count, 50, 50);
-		noFill();
 		
-		// check if dragging the camera with mouse
-		if (d.check(pmouseX, pmouseY, mouseX, mouseY)) { 
-			Matrix camera2 = Matrix.mult(camRot, camera.getCopy());
-			Matrix rotUpdate = d.reorientCamera(camera2);
-			camRot.mult(rotUpdate); // update camera's orientation
-		}
-
-		// If orbiting the data, update camera's orientation and position
-		if (orbiting) {
-			if (count < 80) {
-				Quaternion spin = new Quaternion(dtEase(80, count), 0, -1, 0);
-
-				camRot = camRot.mult(spin.getR(4));
-				camArm = camArm.mult(spin.getR(3));
-				camPivot = camPivot.mult(spin.getR(3)); // may not be necessary depending on the pivot
-
-				camTrans.M[12] = camArm.M[0] + camPivot.M[0];
-				camTrans.M[13] = camArm.M[1] + camPivot.M[1];
-				camTrans.M[14] = camArm.M[2] + camPivot.M[2];
-
-				count++;
-			} else {
-				orbiting = false;
-				count = 0;
-			}
-		}
-
-		// ---- CALCULATE worldToCamera matrix ----
-
-		// perhaps too many unnecessary multiplications here
+		// find world to camera matrix
 		cameraToWorld = Matrix.mult(camTrans, camRot);
-		worldToCamera = cameraToWorld.getInverse();
-
-		// ----------------------------------------
-
-		if (showGrid) {
-			g.display(worldToCamera, toDisplay, 60);
-		}
-
+		worldToCamera = cameraToWorld.inverse();
+		
+		// show grid
+//		grid.display(worldToCamera, toDisplay, 60);
+		
 		world.display(R, worldToCamera, toDisplay);
 
-		// Display buttons and mouse
-		showButtons();
-		
 		Matrix objectToWorld = new Matrix(4, 4);
 		
 		// translation vector
@@ -195,18 +170,94 @@ public class PlainIntersections extends PApplet {
 		objectToWorld.M[13] = -0.1f;
 		objectToWorld.M[14] = -0.05f;
 		
+		ArrayList<Texture> texList = new ArrayList<Texture>();
+		texList.add(textureA);
+		texList.add(textureB);
+		texList.add(textureC);
+//		texList.add(textureD);
 		
-		if (frameCount % 60 == 0) {
-			plane = new Plane(this);
-		}
+		DepthRenderer depthRenderer = new DepthRenderer(this, texList);
 		
-		// ---------- //
-		
-		plane.display(objectToWorld, worldToCamera, toDisplay);
-		texture.display(objectToWorld, worldToCamera, toDisplay);
-		textureB.display(objectToWorld, worldToCamera, toDisplay);
+		depthRenderer.calculateAndDisplay(objectToWorld, worldToCamera, toDisplay);
+	}
 	
-	} // end of draw()
+	public void draw() {
+		
+	}
+	
+//	public void draw() {
+//		/*
+//		 	redraw the background
+//		 */
+//		background(0);
+//		textAlign(LEFT, CENTER);
+//		fill(255);
+//		text("count = " + count, 50, 50);
+//		noFill();
+//		
+//		/* check if dragging the camera with mouse */
+//		if (dragger.check(pmouseX, pmouseY, mouseX, mouseY)) { 
+//			Matrix camera2 = Matrix.mult(camRot, camera);
+//			Matrix rotUpdate = dragger.reorientCamera(camera2);
+//			camRot.mult(rotUpdate); // update camera's orientation
+//		}
+//
+//		/* If orbiting the data, update camera's orientation and position */
+//		if (orbiting) {
+//			if (count < 80) {
+//				Quaternion interpQuat = new Quaternion(dtEase(80, count), 0, -1, 0);
+//
+//				camRot = camRot.mult(interpQuat.getR(4));
+//				camArm = camArm.mult(interpQuat.getR(3));
+//				camPivot = camPivot.mult(interpQuat.getR(3)); // may not be necessary depending on the pivot
+//
+//				camTrans.M[12] = camArm.M[0] + camPivot.M[0];
+//				camTrans.M[13] = camArm.M[1] + camPivot.M[1];
+//				camTrans.M[14] = camArm.M[2] + camPivot.M[2];
+//
+//				count++;
+//			} else {
+//				orbiting = false;
+//				count = 0;
+//			}
+//		}
+//
+//		/* ---- CALCULATE worldToCamera matrix ---- */
+//
+//		/* perhaps too many unnecessary multiplications here */
+//		cameraToWorld = Matrix.mult(camTrans, camRot);
+//		worldToCamera = cameraToWorld.inverse();
+//
+//		/* ---------------------------------------- */
+//
+//		if (showGrid) {
+//			grid.display(worldToCamera, toDisplay, 60);
+//		}
+//
+//		world.display(R, worldToCamera, toDisplay);
+//
+//		/* Display buttons and mouse */
+//		showButtons();
+//		
+//		Matrix objectToWorld = new Matrix(4, 4);
+//		
+//		// translation vector
+//		objectToWorld.M[12] = 0.5f;
+//		objectToWorld.M[13] = -0.1f;
+//		objectToWorld.M[14] = -0.05f;
+//		
+//		
+//		if (frameCount % 60 == 0) {
+//			plane = new Plane(this);
+//		}
+//		
+//		/* ---------- */
+//		
+//		plane.display(objectToWorld, worldToCamera, toDisplay);
+//		texture.display(objectToWorld, worldToCamera, toDisplay);
+//		textureB.display(objectToWorld, worldToCamera, toDisplay);
+//	
+//	}
 
 	void initializeButtons() {
 		orbBut = new PVector(width - 40, 180);
@@ -256,7 +307,7 @@ public class PlainIntersections extends PApplet {
 	public void mousePressed() {
 		int val = checkButtonClick();
 		if (val == -1) {
-			d.pressed();
+			dragger.pressed();
 		} else {
 			if (val == 0) {
 				orbiting = true;
@@ -267,38 +318,23 @@ public class PlainIntersections extends PApplet {
 	}
 
 	public void mouseReleased() {
-		d.released();
+		dragger.released();
 	}
 
 	public void keyPressed() {
-		if (key == CODED) {
-			Matrix bsis = camera.getCopy();
-			bsis.mult(camRot);
-			float step = 0.1f;
-			cameraToWorld = new Matrix(4, 4);
-			if (keyCode == UP) {
-				camTrans.M[12] += bsis.M[8] * step;
-				camTrans.M[13] += bsis.M[9] * step;
-				camTrans.M[14] += bsis.M[10] * step;
-			} else if (keyCode == DOWN) {
-				;
-				camTrans.M[12] -= bsis.M[8] * step;
-				camTrans.M[13] -= bsis.M[9] * step;
-				camTrans.M[14] -= bsis.M[10] * step;
-			} else if (keyCode == LEFT) {
-				camTrans.M[12] -= bsis.M[0] * step;
-				camTrans.M[13] -= bsis.M[1] * step;
-				camTrans.M[14] -= bsis.M[2] * step;
-			} else if (keyCode == RIGHT) {
-				camTrans.M[12] += bsis.M[0] * step;
-				camTrans.M[13] += bsis.M[1] * step;
-				camTrans.M[14] += bsis.M[2] * step;
-			}
-			cameraToWorld.mult(camRot).mult(camTrans);
+		
+		if (key == 'm') {
+//			textureA = new Texture(this, loadImage("sky.jpg"));
+//			textureB = new Texture(this, loadImage("kent.jpg"));
+			textureA = new Texture(this, loadImage("nyc_hq.jpg"));
+			textureB = new Texture(this, loadImage("nyc_hq.jpg"));
+			textureC = new Texture(this, loadImage("nyc_hq.jpg"));
+			textureD = new Texture(this, loadImage("nyc_hq.jpg"));
+			singleRender();
 		}
-
+		
 		if (key == 'l') {
-			saveFrame("pi-######.png");
+			saveFrame("output/pi-######.png");
 		}
 	}
 
