@@ -111,7 +111,7 @@ public class Matrix {
 	}
 
 	/**
-	 * linear transformation of this matrix by matrix A
+	 * Linear transformation of this matrix: A * this
 	 * @param A the linear transformation
 	 * @return
 	 */
@@ -445,7 +445,7 @@ public class Matrix {
 	 * TODO: refactor to just transpose()
 	 * @return
 	 */
-	public Matrix getTranspose() {
+	public Matrix transpose() {
 		Matrix rval = new Matrix(m, n);
 		for (int j = 0; j < m; j++) {
 			for (int i = 0; i < n; i++) {
@@ -455,23 +455,7 @@ public class Matrix {
 		return rval;
 	}
 
-//	Matrix getAverage() {
-//		Matrix rval = new Matrix(n, 1);
-//		// find average
-//		for (int j = 0; j < m; j++) {
-//			for (int i = 0; i < n; i++) {
-//				rval.M[i] += M[j * n + i];
-//			}
-//		}
-//
-//		for (int i = 0; i < n; i++) {
-//			rval.M[i] /= m;
-//		}
-//
-//		return rval;
-//	}
-
-	public Matrix getInverse() {
+	public Matrix inverse() {
 		Matrix rval = new Matrix(n, n);
 		if (n != m) {
 			log.info("This is not a square matrix");
@@ -594,7 +578,7 @@ public class Matrix {
 	// add a multiple of one row
 	// (w*r1) to another row (r2)
 	private void combine(int r1, float w, int r2, float[] m) {
-		int dim = (int) Math.round(Math.pow(m.length, 0.5f));
+		int dim = (int) Math.round(Math.sqrt(m.length));
 		float weighted = 0;
 
 		for (int j = 0; j < dim; j++) {
@@ -605,14 +589,14 @@ public class Matrix {
 
 	// multiply row r1 by a non-zero scalar
 	private void weight(int r1, float w, float[] m) {
-		int dim = (int) Math.round(Math.pow(m.length, 0.5f));
+		int dim = (int) Math.round(Math.sqrt(m.length));
 		for (int j = 0; j < dim; j++)
 			m[j * dim + r1] *= w;
 	}
 
 	// exchange rows r1 and r2
 	private void exchange(int r1, int r2, float[] m) {
-		int dim = (int) Math.round(Math.pow(m.length, 0.5f));
+		int dim = (int) Math.round(Math.sqrt(m.length));
 		float hold = 0;
 
 		for (int j = 0; j < dim; j++) {
