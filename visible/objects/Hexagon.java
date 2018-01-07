@@ -48,8 +48,8 @@ public class Hexagon {
 		// x [-2, 2]
 		// y [-1.6, 1.6]
 		
-		scale.M[0] = 2.5f;
-		scale.M[5] = 2.5f;
+		scale.M[0] = 0.8f;
+		scale.M[5] = 0.8f;
 		
 		log.info("Hex scale X:" + scale.M[0]);
 		log.info("Hex scale Y: " + scale.M[5]);
@@ -63,15 +63,13 @@ public class Hexagon {
 	private void initializeVertices() {
 		 float[] pts = new float[4 * 6];
 		 for (int j = 0; j < 6; j++) {
-			 for (int i = 0; i < 6 ; i++) {
-			     float theta = i * 2f * ((float) Math.PI) / 6f;
+			     float theta = j * 2f * ((float) Math.PI) / 6f;
 			     float x = this.radius * (float) Math.cos(theta);
 			     float y = this.radius * (float) Math.sin(theta);
 			     pts[j * 4 + 0] = x;
 			     pts[j * 4 + 1] = y;
 			     pts[j * 4 + 2] = 0;
 			     pts[j * 4 + 3] = 1;
-			 }
 		 }
 		 this.vertices = new Matrix(pts, 4, 6);
 	}
@@ -96,41 +94,29 @@ public class Hexagon {
 		
 		p.noFill();
 		p.stroke(255);
-		log.info("1");
-		Matrix screenPos1 = vertices.mult(centre);
-		log.info("2");
-
-		Matrix screenPos2 = screenPos1.mult(scale);
+		Matrix screenPos = vertices
+								//.mult(centre)
+								.mult(scale)
+								.mult(rotate)
+								.mult(worldToCamera)
+								.project(2)
+								.mult(toDisplay);
 		
-		log.info("3");
-
-		Matrix screenPos3 = screenPos2.mult(rotate);
-		log.info("4");
-
-		Matrix screenPos4 = screenPos3.mult(worldToCamera);
-									//.mult(objectToWorld)
-		log.info("5");
-
-		Matrix screenPos5 = screenPos4.project(2);
-		log.info("6");
-
-		Matrix screenPos6 = screenPos5.mult(toDisplay);
-		
-		p.fill(255);
-		p.rect(100, 100, 200, 200);
+//		p.fill(255);
+//		p.rect(100, 100, 200, 200);
 		p.stroke(255);
-//		p.beginShape();
-			for (int j = 0; j < screenPos6.m; j++) {
+		p.beginShape();
+			for (int j = 0; j < screenPos.m; j++) {
 				
-				float screenX = screenPos6.M[j * 4 + 0] / 2;
-				float screenY = screenPos6.M[j * 4 + 1] / 2;
+				float screenX = screenPos.M[j * 4 + 0];
+				float screenY = screenPos.M[j * 4 + 1];
 				
 			     log.info("x:" + screenX);
 			     log.info("y:" + screenY);
-					p.rect(screenX, screenX, 10, 10);
-//				p.vertex(screenX, screenY);
+//					p.rect(screenX, screenX, 10, 10);
+				p.vertex(screenX, screenY);
 			}
-//		p.endShape(p.CLOSE);
+		p.endShape(p.CLOSE);
 	}
 	
 }

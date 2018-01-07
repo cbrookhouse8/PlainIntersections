@@ -1,7 +1,4 @@
-
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.stream.IntStream;
 
 import manipulation.Dragger;
 import manipulation.PositionTool;
@@ -13,6 +10,7 @@ import utilities.Logger;
 import visible.objects.Axes;
 import visible.objects.DepthRenderer;
 import visible.objects.Grid;
+import visible.objects.Hexagon;
 import visible.objects.Plane;
 import visible.objects.Texture;
 
@@ -53,13 +51,14 @@ public class PlainIntersections extends PApplet {
 	Quaternion alArm; 
 
 	PVector orbBut; 		// 0
-	PVector gridBut; 	// 2
+	PVector gridBut; 		// 2
 
 	Plane plane;
 	Texture textureA;
 	Texture textureB;
 	Texture textureC;
 	Texture textureD;
+	Hexagon hexagon;
 	
 	// Run this project as Java application and this
 	// method will launch the sketch
@@ -144,11 +143,33 @@ public class PlainIntersections extends PApplet {
 		
 //		textureA = new Texture(this, loadImage("sky.jpg"));
 //		textureB = new Texture(this, loadImage("kent.jpg"));
-		textureA = new Texture(this, loadImage("nyc_hq.jpg"));
-		textureB = new Texture(this, loadImage("nyc_hq.jpg"));
-		textureC = new Texture(this, loadImage("nyc_hq.jpg"));
-		textureD = new Texture(this, loadImage("nyc_hq.jpg"));
-		singleRender();
+		textureA = new Texture(this, loadImage("spain.JPG"));
+		textureB = new Texture(this, loadImage("spain.JPG"));
+		textureC = new Texture(this, loadImage("spain.JPG"));
+		textureD = new Texture(this, loadImage("spain.JPG"));
+		
+//		singleRender();
+		
+		/* ---------------------------------- */
+		
+		hexagon = new Hexagon(this);
+		
+		cameraToWorld = Matrix.mult(camTrans, camRot);
+		worldToCamera = cameraToWorld.inverse();
+		
+		world.display(R, worldToCamera, toDisplay);
+
+		Matrix objectToWorld = new Matrix(4, 4);
+		
+		// translation vector
+		objectToWorld.M[12] = 0.5f;
+		objectToWorld.M[13] = -0.1f;
+		objectToWorld.M[14] = -0.05f;
+		
+		hexagon.display(objectToWorld, worldToCamera, toDisplay);
+		
+		/* ---------------------------------- */
+		
 	}
 	
 	public void singleRender() {
@@ -326,10 +347,10 @@ public class PlainIntersections extends PApplet {
 		if (key == 'm') {
 //			textureA = new Texture(this, loadImage("sky.jpg"));
 //			textureB = new Texture(this, loadImage("kent.jpg"));
-			textureA = new Texture(this, loadImage("nyc_hq.jpg"));
-			textureB = new Texture(this, loadImage("nyc_hq.jpg"));
-			textureC = new Texture(this, loadImage("nyc_hq.jpg"));
-			textureD = new Texture(this, loadImage("nyc_hq.jpg"));
+			textureA = new Texture(this, loadImage("spain.JPG"));
+			textureB = new Texture(this, loadImage("spain.JPG"));
+			textureC = new Texture(this, loadImage("spain.JPG"));
+			textureD = new Texture(this, loadImage("spain.JPG"));
 			singleRender();
 		}
 		
