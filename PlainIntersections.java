@@ -13,6 +13,8 @@ import visible.objects.Grid;
 import visible.objects.Hexagon;
 import visible.objects.Plane;
 import visible.objects.Texture;
+import visible.objects.TileSet;
+import visible.objects.Tileable;
 
 /**
  * TODO: handle the offsets properly
@@ -58,7 +60,9 @@ public class PlainIntersections extends PApplet {
 	Texture textureB;
 	Texture textureC;
 	Texture textureD;
+	
 	Hexagon hexagon;
+	TileSet tileset;
 	
 	// Run this project as Java application and this
 	// method will launch the sketch
@@ -166,7 +170,13 @@ public class PlainIntersections extends PApplet {
 		objectToWorld.M[13] = -0.1f;
 		objectToWorld.M[14] = -0.05f;
 		
-		hexagon.display(objectToWorld, worldToCamera, toDisplay);
+//		hexagon.display(objectToWorld, worldToCamera, toDisplay);
+		
+		tileset = new TileSet(this);
+		
+		tileset.setSeed(hexagon);
+		tileset.solveJoinEdge();
+		tileset.display(objectToWorld, worldToCamera, toDisplay);
 		
 		/* ---------------------------------- */
 		

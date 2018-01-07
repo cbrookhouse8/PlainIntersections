@@ -11,7 +11,7 @@ import utilities.Logger;
 public class Matrix {
 	// column major
 
-	int n; 				// rows
+	public int n; 				// rows
 	public int m; 		// cols
 	public float[] M; 	// col major
 	Logger log;
