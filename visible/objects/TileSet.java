@@ -27,10 +27,21 @@ public class TileSet {
 	public void setSeed(Hexagon seed) {
 		this.p = p;
 		this.seed = seed;
-		//tiles.add(seed);
+		tiles.add(seed);
 	}
 
-	public void solveJoinEdge() {
+	/**
+	 * 
+	 * @param seed
+	 * @param joinEdge [1,6]
+	 * @return
+	 */
+	public Hexagon createLinkedTile(Hexagon seed, int joinEdge) {
+		
+		if (joinEdge < 1 || joinEdge > 6) {
+			throw new IllegalArgumentException("joinEdge < 1 || joinEdge > 6");
+		}
+		
 		// Object space transformation is a 
 		// scaling, rotation and then translation
 		// the hexagon is fortunately defined at the origin
@@ -48,17 +59,13 @@ public class TileSet {
 		// Extract the inverse translation (just -ve vector)
 		
 		// Translation from object space back to the origin, where hexagons are defined
-		Matrix translation = new Matrix(4, 4);
-		translation.M[12] = -tfm.M[12];
-		translation.M[13] = -tfm.M[13];
+		Matrix centreAtOrigin = new Matrix(4, 4);
+		centreAtOrigin.M[12] = -tfm.M[12];
+		centreAtOrigin.M[13] = -tfm.M[13];
 		
 		// Vertices without the translation, but still after
 		// the scaling and rotation at the origin
-		Matrix vcs = SRT_vertices.mult(translation);
-		
-		Hexagon hex1 = new Hexagon(p);
-		Hexagon hex2 = new Hexagon(p);
-		Hexagon hex3 = new Hexagon(p);
+		Matrix vcs = SRT_vertices.mult(centreAtOrigin);
 		
 		// Select an edge of the hexagon onto which we
 		// want to join another hexagon
@@ -67,8 +74,11 @@ public class TileSet {
 		// to another neighbouring vertex. These are the two
 		// vertices we'll select:
 		
-		float[] v_1 = new float[] { vcs.M[0], vcs.M[1], vcs.M[2] };
-		float[] v_2 = new float[] { vcs.M[4], vcs.M[5], vcs.M[6] };
+		int j = joinEdge - 1;
+		int k = joinEdge == 6 ? 0 : joinEdge;
+
+		float[] v_1 = new float[] { vcs.M[j * 4 + 0], vcs.M[j * 4 + 1], vcs.M[j * 4 + 2] };
+		float[] v_2 = new float[] { vcs.M[k * 4 + 0], vcs.M[k * 4 + 1], vcs.M[k * 4 + 2] };
 		
 		// When we create another hexagon to join onto this edge,
 		// we'll also want to apply some kind of rotation to it
@@ -84,9 +94,9 @@ public class TileSet {
 		// Perpendicular distance of seed join edge to origin
 		// This is used to translate the tile's join edge to the origin. 
 		float[] toAxis = new float[] { 
-				vcs.M[0] + (vcs.M[4] - vcs.M[0]) * 0.5f, 
-				vcs.M[1] + (vcs.M[5] - vcs.M[1]) * 0.5f, 
-				vcs.M[2] + (vcs.M[6] - vcs.M[2]) * 0.5f };
+				v_1[0] + (v_2[0] - v_1[0]) * 0.5f, 
+				v_1[1] + (v_2[1] - v_1[1]) * 0.5f, 
+				v_1[2] + (v_2[2] - v_1[2]) * 0.5f };
 		
 		// Construct the translation as a Matrix, using the
 		// fourth column to hold the translation
@@ -105,34 +115,30 @@ public class TileSet {
 		float angle = (float) (Math.random() * Math.PI);
 	
 		Quaternion q_random = new Quaternion(angle, 
-				 								(vcs.M[4] - vcs.M[0]), 	// axis x
-				 								(vcs.M[5] - vcs.M[1]), 	// axis y
-				 								(vcs.M[6] - vcs.M[2])); // axis z
+				 								(v_2[0] - v_1[0]), 	// axis x
+				 								(v_2[1] - v_1[1]), 	// axis y
+				 								(v_2[2] - v_1[2])); // axis z
 		
 		// Get the rotation as a matrix
 		Matrix rotation = q_random.getR(4);
 				
-		hex1.setObjectSpaceTransform(tfm);
-		hex2.setObjectSpaceTransform(tfm.mult(translation).mult(translation.inverse()));
-		
 		// The final objectSpaceTransform for the tile is:
 		// translation of centre to origin -> 
 		// translation of join edge such that it is passing through the origin ->
 		// rotation about the join edge ->
 		// inverse translation of join edge to origin
 		
-		hex3.setObjectSpaceTransform(tfm.mult(translation).mult(shift).mult(rotation).mult(shift.inverse()).mult(translation.inverse()));
-//		hex3.setObjectSpaceTransform(tfm.mult(translation).mult(shift).mult(rotation).mult(shift.inverse()));
+		// TODO: NOTE THIS ONLY WORKS FOR THE INITIAL HEXAGON. FIX
 		
+		Matrix obTransform = tfm.mult(centreAtOrigin).mult(shift).mult(rotation).mult(shift.inverse()).mult(centreAtOrigin.inverse());
 		
-		tiles.add(hex1);
-//		tiles.add(hex2);
-		tiles.add(hex3);
-		
-		// now just figure out how to initialize another hexagon that joins this one,
-		// along hte first edge
-		
-		
+		Hexagon connector = new Hexagon(p);
+		connector.setObjectSpaceTransform(obTransform);
+		return connector;
+	}
+	
+	public void addLinkedTile(Hexagon hex) {
+		tiles.add(hex);
 	}
 	
 	public void display(Matrix objectToWorld, Matrix worldToCamera, Matrix toDisplay) {

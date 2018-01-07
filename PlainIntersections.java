@@ -64,8 +64,8 @@ public class PlainIntersections extends PApplet {
 	Hexagon hexagon;
 	TileSet tileset;
 	
-	// Run this project as Java application and this
-	// method will launch the sketch
+//	// Run this project as Java application and this
+//	// method will launch the sketch
 	public static void main(String[] args) {
 		PApplet.main("PlainIntersections");
 	}
@@ -175,7 +175,14 @@ public class PlainIntersections extends PApplet {
 		tileset = new TileSet(this);
 		
 		tileset.setSeed(hexagon);
-		tileset.solveJoinEdge();
+		Hexagon hex2 = tileset.createLinkedTile(hexagon, 2);
+		Hexagon hex3 = tileset.createLinkedTile(hex2, 5);
+//		Hexagon hex4 = tileset.createLinkedTile(hex3, 4);
+		
+		tileset.addLinkedTile(hex2);
+//		tileset.addLinkedTile(hex3);
+//		tileset.addLinkedTile(hex4);
+		
 		tileset.display(objectToWorld, worldToCamera, toDisplay);
 		
 		/* ---------------------------------- */
