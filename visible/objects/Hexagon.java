@@ -19,6 +19,10 @@ public class Hexagon implements Tileable {
 	Matrix objectSpaceTransform;
 	
 	Logger log;
+	
+	float r;
+	float g;
+	float b;
 	int opacity;
 	
 	ArrayList<Point> points;
@@ -26,7 +30,12 @@ public class Hexagon implements Tileable {
 	public Hexagon(PApplet p) {
 		this.p = p;
 		
+		this.r = (float) Math.random() * 155;
+		this.g = (float) Math.random() * 155;
+		this.b = (float) Math.random() * 155;
 		this.opacity = 255; // default
+		
+		
 		
 		log = new Logger(this);
 		
@@ -68,8 +77,8 @@ public class Hexagon implements Tileable {
 		// x [-2, 2]
 		// y [-1.6, 1.6]
 
-		scale.M[0] = 0.8f;
-		scale.M[5] = 0.8f;
+		scale.M[0] = 0.3f;
+		scale.M[5] = 0.3f;
 
 		log.info("Hex scale X:" + scale.M[0]);
 		log.info("Hex scale Y: " + scale.M[5]);
@@ -82,7 +91,7 @@ public class Hexagon implements Tileable {
 		// Translation (in object space)
 		translate = new Matrix(4, 4);
 		translate.M[12] = 0.6f;
-		translate.M[13] = -0.7f;
+		translate.M[13] = 0.7f;
 		
 		objectSpaceTransform = scale.mult(rotate).mult(translate);
 	}
@@ -117,10 +126,7 @@ public class Hexagon implements Tileable {
 	
 	@Override
 	public void display(Matrix objectToWorld, Matrix worldToCamera, Matrix toDisplay) {
-		
-		float r = (float) Math.random() * 155;
-		float g = (float) Math.random() * 155;
-		float b = (float) Math.random() * 155;
+
 		p.noFill();
 		p.stroke(100 + r, 100 + g, 100 + b);
 		Matrix screenPos = vertices.mult(objectSpaceTransform)
@@ -134,8 +140,8 @@ public class Hexagon implements Tileable {
 				float screenX = screenPos.M[j * 4 + 0];
 				float screenY = screenPos.M[j * 4 + 1];
 				
-			     log.info("x:" + screenX);
-			     log.info("y:" + screenY);
+//			     log.info("x:" + screenX);
+//			     log.info("y:" + screenY);
 				p.vertex(screenX, screenY);
 			}
 		p.endShape(p.CLOSE);
