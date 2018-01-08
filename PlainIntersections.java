@@ -71,7 +71,7 @@ public class PlainIntersections extends PApplet {
 	}
 
 	public void settings() {
-		size(800, 800);
+		size(600, 600);
 	}
 
 	public void setup() {
@@ -147,10 +147,10 @@ public class PlainIntersections extends PApplet {
 		
 //		textureA = new Texture(this, loadImage("sky.jpg"));
 //		textureB = new Texture(this, loadImage("kent.jpg"));
-		textureA = new Texture(this, loadImage("spain.JPG"));
-		textureB = new Texture(this, loadImage("spain.JPG"));
-		textureC = new Texture(this, loadImage("spain.JPG"));
-		textureD = new Texture(this, loadImage("spain.JPG"));
+		textureA = new Texture(this, loadImage("data/nyc_hq.jpg"));
+		textureB = new Texture(this, loadImage("data/nyc_hq.jpg"));
+		textureC = new Texture(this, loadImage("data/nyc_hq.jpg"));
+		textureD = new Texture(this, loadImage("data/nyc_hq.jpg"));
 		
 //		singleRender();
 		
@@ -175,13 +175,21 @@ public class PlainIntersections extends PApplet {
 		tileset = new TileSet(this);
 		
 		tileset.setSeed(hexagon);
-		Hexagon hex2 = tileset.createLinkedTile(hexagon, 2);
-		Hexagon hex3 = tileset.createLinkedTile(hex2, 5);
-//		Hexagon hex4 = tileset.createLinkedTile(hex3, 4);
 		
+		Hexagon hex1 = tileset.createLinkedTile(hexagon, 1);
+		Hexagon hex2 = tileset.createLinkedTile(hex1, 4);
+		Hexagon hex3 = tileset.createLinkedTile(hex2, 2);
+		Hexagon hex4 = tileset.createLinkedTile(hex3, 4);
+		Hexagon hex5 = tileset.createLinkedTile(hex4, 1);
+		
+		tileset.addLinkedTile(hex1);
 		tileset.addLinkedTile(hex2);
-//		tileset.addLinkedTile(hex3);
-//		tileset.addLinkedTile(hex4);
+		tileset.addLinkedTile(hex3);
+		tileset.addLinkedTile(hex4);
+		tileset.addLinkedTile(hex5);
+
+		Hexagon hex3B = tileset.createLinkedTile(hex2, 3);
+		tileset.addLinkedTile(hex3B);
 		
 		tileset.display(objectToWorld, worldToCamera, toDisplay);
 		
@@ -220,82 +228,80 @@ public class PlainIntersections extends PApplet {
 	}
 	
 	public void draw() {
+		/*
+		 	redraw the background
+		 */
+		background(0);
+		textAlign(LEFT, CENTER);
+		fill(255);
+		text("count = " + count, 50, 50);
+		noFill();
 		
-	}
-	
-//	public void draw() {
-//		/*
-//		 	redraw the background
-//		 */
-//		background(0);
-//		textAlign(LEFT, CENTER);
-//		fill(255);
-//		text("count = " + count, 50, 50);
-//		noFill();
-//		
-//		/* check if dragging the camera with mouse */
-//		if (dragger.check(pmouseX, pmouseY, mouseX, mouseY)) { 
-//			Matrix camera2 = Matrix.mult(camRot, camera);
-//			Matrix rotUpdate = dragger.reorientCamera(camera2);
-//			camRot.mult(rotUpdate); // update camera's orientation
-//		}
-//
-//		/* If orbiting the data, update camera's orientation and position */
-//		if (orbiting) {
-//			if (count < 80) {
-//				Quaternion interpQuat = new Quaternion(dtEase(80, count), 0, -1, 0);
-//
-//				camRot = camRot.mult(interpQuat.getR(4));
-//				camArm = camArm.mult(interpQuat.getR(3));
-//				camPivot = camPivot.mult(interpQuat.getR(3)); // may not be necessary depending on the pivot
-//
-//				camTrans.M[12] = camArm.M[0] + camPivot.M[0];
-//				camTrans.M[13] = camArm.M[1] + camPivot.M[1];
-//				camTrans.M[14] = camArm.M[2] + camPivot.M[2];
-//
-//				count++;
-//			} else {
-//				orbiting = false;
-//				count = 0;
-//			}
-//		}
-//
-//		/* ---- CALCULATE worldToCamera matrix ---- */
-//
-//		/* perhaps too many unnecessary multiplications here */
-//		cameraToWorld = Matrix.mult(camTrans, camRot);
-//		worldToCamera = cameraToWorld.inverse();
-//
-//		/* ---------------------------------------- */
-//
-//		if (showGrid) {
-//			grid.display(worldToCamera, toDisplay, 60);
-//		}
-//
-//		world.display(R, worldToCamera, toDisplay);
-//
-//		/* Display buttons and mouse */
-//		showButtons();
-//		
-//		Matrix objectToWorld = new Matrix(4, 4);
-//		
-//		// translation vector
-//		objectToWorld.M[12] = 0.5f;
-//		objectToWorld.M[13] = -0.1f;
-//		objectToWorld.M[14] = -0.05f;
-//		
-//		
-//		if (frameCount % 60 == 0) {
-//			plane = new Plane(this);
-//		}
-//		
-//		/* ---------- */
-//		
+		/* check if dragging the camera with mouse */
+		if (dragger.check(pmouseX, pmouseY, mouseX, mouseY)) { 
+			Matrix camera2 = Matrix.mult(camRot, camera);
+			Matrix rotUpdate = dragger.reorientCamera(camera2);
+			camRot.mult(rotUpdate); // update camera's orientation
+		}
+
+		/* If orbiting the data, update camera's orientation and position */
+		if (orbiting) {
+			if (count < 80) {
+				Quaternion interpQuat = new Quaternion(dtEase(80, count), 0, -1, 0);
+
+				camRot = camRot.mult(interpQuat.getR(4));
+				camArm = camArm.mult(interpQuat.getR(3));
+				camPivot = camPivot.mult(interpQuat.getR(3)); // may not be necessary depending on the pivot
+
+				camTrans.M[12] = camArm.M[0] + camPivot.M[0];
+				camTrans.M[13] = camArm.M[1] + camPivot.M[1];
+				camTrans.M[14] = camArm.M[2] + camPivot.M[2];
+
+				count++;
+			} else {
+				orbiting = false;
+				count = 0;
+			}
+		}
+
+		/* ---- CALCULATE worldToCamera matrix ---- */
+
+		/* perhaps too many unnecessary multiplications here */
+		cameraToWorld = Matrix.mult(camTrans, camRot);
+		worldToCamera = cameraToWorld.inverse();
+
+		/* ---------------------------------------- */
+
+		if (showGrid) {
+			grid.display(worldToCamera, toDisplay, 60);
+		}
+
+		world.display(R, worldToCamera, toDisplay);
+
+		/* Display buttons and mouse */
+		showButtons();
+		
+		Matrix objectToWorld = new Matrix(4, 4);
+		
+		// translation vector
+		objectToWorld.M[12] = 0.5f;
+		objectToWorld.M[13] = -0.1f;
+		objectToWorld.M[14] = -0.05f;
+		
+		
+		if (frameCount % 60 == 0) {
+			plane = new Plane(this);
+		}
+		
+		/* ---------- */
+		
 //		plane.display(objectToWorld, worldToCamera, toDisplay);
 //		texture.display(objectToWorld, worldToCamera, toDisplay);
 //		textureB.display(objectToWorld, worldToCamera, toDisplay);
-//	
-//	}
+	
+		tileset.display(objectToWorld, worldToCamera, toDisplay);
+		
+	}
 
 	void initializeButtons() {
 		orbBut = new PVector(width - 40, 180);
@@ -364,10 +370,10 @@ public class PlainIntersections extends PApplet {
 		if (key == 'm') {
 //			textureA = new Texture(this, loadImage("sky.jpg"));
 //			textureB = new Texture(this, loadImage("kent.jpg"));
-			textureA = new Texture(this, loadImage("spain.JPG"));
-			textureB = new Texture(this, loadImage("spain.JPG"));
-			textureC = new Texture(this, loadImage("spain.JPG"));
-			textureD = new Texture(this, loadImage("spain.JPG"));
+			textureA = new Texture(this, loadImage("data/nyc_hq.jpg"));
+			textureB = new Texture(this, loadImage("data/nyc_hq.jpg"));
+			textureC = new Texture(this, loadImage("data/nyc_hq.jpg"));
+			textureD = new Texture(this, loadImage("data/nyc_hq.jpg"));
 			singleRender();
 		}
 		
